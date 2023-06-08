@@ -14,7 +14,7 @@
         <PostList :post-list="postList" />
       </a-tab-pane>
       <a-tab-pane key="picture" tab="图片">
-        <PictureList />
+        <PictureList :picture-list="pictureList" />
       </a-tab-pane>
       <a-tab-pane key="user" tab="用户">
         <UserList :user-list="userList" />
@@ -37,6 +37,7 @@ import MyAxios from "@/plugins/MyAxios";
 const postList = ref([]);
 
 MyAxios.post("/post/list/page/vo", {}).then((res: any) => {
+  //都还没有传递参数
   postList.value = res.records;
 });
 
@@ -44,6 +45,12 @@ const userList = ref([]);
 MyAxios.post("/user/list/page/vo", {}).then((res: any) => {
   userList.value = res.records;
 });
+
+const pictureList = ref([]);
+MyAxios.post("/picture/list/page/vo", {}).then((res: any) => {
+  pictureList.value = res.records;
+});
+
 const searchText = ref("");
 const router = useRouter();
 const route = useRoute();
