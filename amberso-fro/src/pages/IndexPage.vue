@@ -34,22 +34,9 @@ import _default from "ant-design-vue/es/vc-slick/inner-slider";
 import data = _default.data;
 import MyAxios from "@/plugins/MyAxios";
 
-const postList = ref([]);
-
-MyAxios.post("/post/list/page/vo", {}).then((res: any) => {
-  //都还没有传递参数
-  postList.value = res.records;
-});
-
-const userList = ref([]);
-MyAxios.post("/user/list/page/vo", {}).then((res: any) => {
-  userList.value = res.records;
-});
-
 const pictureList = ref([]);
-MyAxios.post("/picture/list/page/vo", {}).then((res: any) => {
-  pictureList.value = res.records;
-});
+const postList = ref([]);
+const userList = ref([]);
 
 const searchText = ref("");
 const router = useRouter();
@@ -62,8 +49,33 @@ const initSearchParams = {
   pageNum: 1,
 };
 
+/*
+ * 加载数据---以实现点击search就实现查询的功能
+ * */
+const loadData = (params: any) => {
+  const query = {
+    ...params,
+    searchText: params.text,
+  };
+  MyAxios.post("/post/list/page/vo", query).then((res: any) => {
+    //都还没有传递参数
+    postList.value = res.records;
+  });
+
+  MyAxios.post("/user/list/page/vo", query).then((res: any) => {
+    userList.value = res.records;
+  });
+
+  MyAxios.post("/picture/list/page/vo", query).then((res: any) => {
+    pictureList.value = res.records;
+  });
+};
+
 // alert(route.params.category);
 const searchParams = ref(initSearchParams);
+//首次请求
+loadData(initSearchParams);
+
 watchEffect(() => {
   searchParams.value = {
     ...initSearchParams,
@@ -71,10 +83,13 @@ watchEffect(() => {
   } as any;
 });
 const onSearch = (value: string) => {
-  alert(value);
+  // alert(value);
+  console.log(value);
   router.push({
     query: searchParams.value,
   });
+  //以实现点击search就实现查询的功能
+  loadData(searchParams);
 };
 const onTabChange = (key: string) => {
   router.push({
