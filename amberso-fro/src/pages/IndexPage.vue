@@ -53,9 +53,10 @@ const initSearchParams = {
 const searchParams = ref(initSearchParams);
 
 /*
- * 加载数据---以实现点击search就实现查询的功能
+ * 加载数据第一种版本---以实现点击search就实现查询的功能
+ *
  * */
-const loadData = (params: any) => {
+const loadDataold = (params: any) => {
   const postQuery = {
     ...params,
     searchText: params.text,
@@ -79,6 +80,23 @@ const loadData = (params: any) => {
   };
   MyAxios.post("/picture/list/page/vo", pictureQuery).then((res: any) => {
     pictureList.value = res.records;
+  });
+};
+
+/*
+ * 加载数据第二种版本---以实现点击search就实现查询的功能
+ *
+ * */
+const loadData = (params: any) => {
+  const query = {
+    ...params,
+    searchText: params.text,
+  };
+  MyAxios.post("/search/all", query).then((res: any) => {
+    //都还没有传递参数
+    postList.value = res.postList;
+    userList.value = res.userList;
+    pictureList.value = res.pictureList;
   });
 };
 
