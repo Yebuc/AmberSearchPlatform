@@ -118,6 +118,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             queryWrapper.like("title", searchText).or().like("content", searchText);
         }
         queryWrapper.like(StringUtils.isNotBlank(title), "title", title);
+        //TODO 可以在前端多传几个参数过来，查询的范围就更广了，取决于前端穿的参数以及后端接收的参数
         queryWrapper.like(StringUtils.isNotBlank(content), "content", content);
         if (CollectionUtils.isNotEmpty(tagList)) {
             for (String tag : tagList) {

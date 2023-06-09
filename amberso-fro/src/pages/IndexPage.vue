@@ -42,37 +42,46 @@ const searchText = ref("");
 const router = useRouter();
 const route = useRoute();
 const activeKey = route.params.category;
+
 const initSearchParams = {
   // text: "",//是否增加？？
   text: "",
   pageSize: 10,
   pageNum: 1,
 };
+// alert(route.params.category);
+const searchParams = ref(initSearchParams);
 
 /*
  * 加载数据---以实现点击search就实现查询的功能
  * */
 const loadData = (params: any) => {
-  const query = {
+  const postQuery = {
     ...params,
     searchText: params.text,
   };
-  MyAxios.post("/post/list/page/vo", query).then((res: any) => {
+  MyAxios.post("/post/list/page/vo", postQuery).then((res: any) => {
     //都还没有传递参数
     postList.value = res.records;
   });
 
-  MyAxios.post("/user/list/page/vo", query).then((res: any) => {
+  const userQuery = {
+    ...params,
+    userName: params.text, //这里要对应后端接收的参数
+    // userProfile: params.text, //这里要对应后端接收的参数
+  };
+  MyAxios.post("/user/list/page/vo", userQuery).then((res: any) => {
     userList.value = res.records;
   });
-
-  MyAxios.post("/picture/list/page/vo", query).then((res: any) => {
+  const pictureQuery = {
+    ...params,
+    searchText: params.text,
+  };
+  MyAxios.post("/picture/list/page/vo", pictureQuery).then((res: any) => {
     pictureList.value = res.records;
   });
 };
 
-// alert(route.params.category);
-const searchParams = ref(initSearchParams);
 //首次请求
 loadData(initSearchParams);
 
@@ -80,16 +89,17 @@ watchEffect(() => {
   searchParams.value = {
     ...initSearchParams,
     text: route.query.text,
+    //只要watchEffect发生了修改，就会触发重新执行
   } as any;
 });
 const onSearch = (value: string) => {
-  // alert(value);
+  // alert(value);onSearch会改变页面的路由
   console.log(value);
   router.push({
     query: searchParams.value,
   });
   //以实现点击search就实现查询的功能
-  loadData(searchParams);
+  loadData(searchParams.value);
 };
 const onTabChange = (key: string) => {
   router.push({
