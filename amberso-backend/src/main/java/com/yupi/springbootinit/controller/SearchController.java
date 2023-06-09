@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.yupi.springbootinit.common.BaseResponse;
 import com.yupi.springbootinit.common.ErrorCode;
 import com.yupi.springbootinit.common.ResultUtils;
+import com.yupi.springbootinit.exception.BusinessException;
 import com.yupi.springbootinit.exception.ThrowUtils;
 import com.yupi.springbootinit.model.dto.picture.PictureQueryRequest;
 import com.yupi.springbootinit.model.dto.post.PostQueryRequest;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 //聚合接口
 @RestController
@@ -50,22 +52,48 @@ public class SearchController {
     public BaseResponse<SearchVO> searchAll(@RequestBody SearchRequest searchRequest,HttpServletRequest request){
 
         String searchText = searchRequest.getSearchText();
-        Page<Picture> picturePage = pictureService.searchPicture(searchText, 1, 10);//图片参数解析
+        //使用异步编排-----并发操作  多线程
 
-        UserQueryRequest userQueryRequest = new UserQueryRequest();//用户参数解析
-        userQueryRequest.setUserName(searchText);
-        Page<UserVO> userVOPage = userService.listUserVOByPage(userQueryRequest);
+        CompletableFuture<Page<UserVO>> userTask = CompletableFuture.supplyAsync(() -> {
+            UserQueryRequest userQueryRequest = new UserQueryRequest();//用户参数解析
+            userQueryRequest.setUserName(searchText);
+            Page<UserVO> userVOPage = userService.listUserVOByPage(userQueryRequest);
+            return userVOPage;
+        });
 
-        PostQueryRequest postQueryRequest = new PostQueryRequest();//帖子参数解析
-        postQueryRequest.setSearchText(searchText);
-        Page<PostVO> postVOPage = postService.listPostVOByPage(postQueryRequest, request);
+        CompletableFuture<Page<PostVO>> postTask = CompletableFuture.supplyAsync(() -> {
+            PostQueryRequest postQueryRequest = new PostQueryRequest();//帖子参数解析
+            postQueryRequest.setSearchText(searchText);
+            Page<PostVO> postVOPage = postService.listPostVOByPage(postQueryRequest, request);
+            return postVOPage;
+        });
 
-        SearchVO searchVO = new SearchVO();
-        searchVO.setPictureList(picturePage.getRecords());
-        searchVO.setPostList(postVOPage.getRecords());
-        searchVO.setUserList(userVOPage.getRecords());
+        CompletableFuture<Page<Picture>> pictureTask = CompletableFuture.supplyAsync(() -> {
+            Page<Picture> picturePage = pictureService.searchPicture(searchText, 1, 10);//图片参数解析
+            return picturePage;
+        });
 
-        return ResultUtils.success(searchVO);//返回出去
+        CompletableFuture.allOf(userTask,postTask,pictureTask).join();//这行代码相当于打了一个断点，只有在userTask,postTask,pictureTask这三个任务执行完之后才会，接着执行下面的代码
+        try{
+            Page<UserVO> userVOPage = userTask.get();
+            Page<PostVO> postVOPage = postTask.get();
+            Page<Picture> picturePage = pictureTask.get();
+
+
+            SearchVO searchVO = new SearchVO();
+            searchVO.setPictureList(picturePage.getRecords());
+            searchVO.setPostList(postVOPage.getRecords());
+            searchVO.setUserList(userVOPage.getRecords());
+
+            return ResultUtils.success(searchVO);//返回出去
+
+        }catch (Exception e){
+            log.error("查询异常",e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"查询异常");
+        }
+
+
+
     }
 
 
