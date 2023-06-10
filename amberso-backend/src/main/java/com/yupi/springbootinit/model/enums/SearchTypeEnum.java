@@ -1,23 +1,26 @@
 package com.yupi.springbootinit.model.enums;
 
+import org.apache.commons.lang3.ObjectUtils;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.ObjectUtils;
 
 /**
- * 文件上传业务类型枚举
+ * 搜索(数据源)类型枚举
  * 根据不同的业务去划分不同的存储路径
  */
-public enum FileUploadBizEnum {
+public enum SearchTypeEnum {
 
-    USER_AVATAR("用户头像", "user_avatar");
+    POST("帖子", "post"),
+    USER("用户", "user"),
+    PICTURE("图片", "picture");
 
     private final String text;
 
     private final String value;
 
-    FileUploadBizEnum(String text, String value) {
+    SearchTypeEnum(String text, String value) {
         this.text = text;
         this.value = value;
     }
@@ -37,11 +40,11 @@ public enum FileUploadBizEnum {
      * @param value
      * @return
      */
-    public static FileUploadBizEnum getEnumByValue(String value) {
+    public static SearchTypeEnum getEnumByValue(String value) {
         if (ObjectUtils.isEmpty(value)) {
             return null;
         }
-        for (FileUploadBizEnum anEnum : FileUploadBizEnum.values()) {
+        for (SearchTypeEnum anEnum : SearchTypeEnum.values()) {
             if (anEnum.value.equals(value)) {
                 return anEnum;
             }

@@ -33,6 +33,7 @@ import { useRoute, useRouter } from "vue-router";
 import _default from "ant-design-vue/es/vc-slick/inner-slider";
 import data = _default.data;
 import MyAxios from "@/plugins/MyAxios";
+import { message } from "ant-design-vue";
 
 const pictureList = ref([]);
 const postList = ref([]);
@@ -45,6 +46,7 @@ const activeKey = route.params.category;
 
 const initSearchParams = {
   // text: "",//是否增加？？
+  type: activeKey,
   text: "",
   pageSize: 10,
   pageNum: 1,
@@ -56,7 +58,7 @@ const searchParams = ref(initSearchParams);
  * 加载数据第一种版本---以实现点击search就实现查询的功能
  *
  * */
-const loadDataold = (params: any) => {
+const loadDataOld = (params: any) => {
   const postQuery = {
     ...params,
     searchText: params.text,
@@ -84,31 +86,60 @@ const loadDataold = (params: any) => {
 };
 
 /*
- * 加载数据第二种版本---以实现点击search就实现查询的功能
+ * (加载聚合数据)加载数据第二种版本---以实现点击search就实现查询的功能
  *
  * */
-const loadData = (params: any) => {
+const loadDataAll = (params: any) => {
   const query = {
     ...params,
     searchText: params.text,
   };
   MyAxios.post("/search/all", query).then((res: any) => {
-    //都还没有传递参数
+    //query传递参数
     postList.value = res.postList;
     userList.value = res.userList;
     pictureList.value = res.pictureList;
   });
 };
 
+/*
+ * (根据type来获取加载数据)加载数据第三种版本---加载单类数据
+ *
+ * */
+const loadData = (params: any) => {
+  const { type } = params;
+  if (!type) {
+    message.error("类别为空"); //首次访问点击localhost:8080/的时候，会出现类别为0的错误提示，想办法处理调记得
+    return;
+  }
+  const query = {
+    ...params,
+    searchText: params.text,
+  };
+  MyAxios.post("/search/all", query).then((res: any) => {
+    //query传递参数了   根据type来查询单类参数
+    // alert("type=" + type);
+    if (type === "post") {
+      postList.value = res.postList;
+    } else if (type === "user") {
+      userList.value = res.userList;
+    } else if (type === "picture") {
+      pictureList.value = res.pictureList;
+    }
+  });
+};
+
 //首次请求
-loadData(initSearchParams);
+// loadData(initSearchParams);//直接在watchEffect里面监听就好了，不需要首次请求了
 
 watchEffect(() => {
   searchParams.value = {
     ...initSearchParams,
     text: route.query.text,
-    //只要watchEffect发生了修改，就会触发重新执行
+    //只要watchEffect发生了修改，就会触发重新执行 页面的加载
+    type: route.params.category,
   } as any;
+  loadData(searchParams.value);
 });
 const onSearch = (value: string) => {
   // alert(value);onSearch会改变页面的路由
