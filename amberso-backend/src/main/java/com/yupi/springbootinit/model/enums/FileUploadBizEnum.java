@@ -7,9 +7,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * 文件上传业务类型枚举
- *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * 根据不同的业务去划分不同的存储路径
  */
 public enum FileUploadBizEnum {
 

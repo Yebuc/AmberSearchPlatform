@@ -27,7 +27,14 @@ public class PictureServiceImpl implements PictureService {
     @Override
     public Page<Picture> searchPicture(String searchText, long pageNum, long pageSize) {
         long current = (pageNum - 1) * pageSize;//动态变换查询的参数
-        String url = String.format("https://cn.bing.com/images/search?q=%s&first=%s",searchText,current);//%s为动态占位符
+
+        String url = "";
+        if(searchText == null || searchText.length() == 0){//搜索关键词为空的时候需要特殊处理
+            url = String.format("https://cn.bing.com/images/search?q=null&first=%s",current);//%s为动态占位符
+        }else{
+            url = String.format("https://cn.bing.com/images/search?q=%s&first=%s",searchText,current);//%s为动态占位符
+        }
+
         Document doc = null;
         try {
             doc = Jsoup.connect(url).get();

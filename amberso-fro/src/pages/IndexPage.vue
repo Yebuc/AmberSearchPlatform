@@ -61,7 +61,7 @@ const searchParams = ref(initSearchParams);
  * 加载数据第一种版本---以实现点击search就实现查询的功能
  *
  * */
-const loadDataold = (params: any) => {
+const loadDataOld = (params: any) => {
   const postQuery = {
     ...params,
     searchText: params.text,
@@ -89,7 +89,7 @@ const loadDataold = (params: any) => {
 };
 
 /*
- * 加载数据第二种版本---以实现点击search就实现查询的功能
+ * (加载聚合数据)加载数据第二种版本---以实现点击search就实现查询的功能
  *
  * */
 const loadDataAll = (params: any) => {
@@ -106,13 +106,17 @@ const loadDataAll = (params: any) => {
 };
 
 /*
+<<<<<<< HEAD
  * 加载数据第三种版本---获取单类数据
+=======
+ * (根据type来获取加载数据)加载数据第三种版本---加载单类数据
+>>>>>>> c1a0d7a4fe69eefeb623d23cd849b7628c2769bf
  *
  * */
 const loadData = (params: any) => {
   const { type } = params;
   if (!type) {
-    message.error("tab栏类别为空");
+    message.error("类别为空"); //首次访问点击localhost:8080/的时候，会出现类别为0的错误提示，想办法处理调记得
     return;
   }
   const query = {
@@ -120,6 +124,8 @@ const loadData = (params: any) => {
     searchText: params.text,
   };
   MyAxios.post("/search/all", query).then((res: any) => {
+    //query传递参数了   根据type来查询单类参数
+    // alert("type=" + type);
     if (type === "post") {
       postList.value = res.postList;
     } else if (type === "user") {
@@ -132,7 +138,7 @@ const loadData = (params: any) => {
 
 //首次请求
 // loadData(initSearchParams);
-
+// loadData(initSearchParams);//直接在watchEffect里面监听就好了，不需要首次请求了
 watchEffect(() => {
   searchParams.value = {
     ...initSearchParams,

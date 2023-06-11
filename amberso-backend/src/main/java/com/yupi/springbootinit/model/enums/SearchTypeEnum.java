@@ -7,8 +7,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
+<<<<<<< HEAD
  * 聚合搜索（数据源）类型枚举
  *
+=======
+ * 搜索(数据源)类型枚举
+ * 根据不同的业务去划分不同的存储路径
+>>>>>>> c1a0d7a4fe69eefeb623d23cd849b7628c2769bf
  */
 public enum SearchTypeEnum {
 

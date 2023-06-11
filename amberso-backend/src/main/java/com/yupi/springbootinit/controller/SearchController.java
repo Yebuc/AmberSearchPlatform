@@ -57,9 +57,7 @@ public class SearchController {
     public BaseResponse<SearchVO> searchAll(@RequestBody SearchRequest searchRequest,HttpServletRequest request){
         return ResultUtils.success(searchFacade.searchAll(searchRequest,request));
 
-
     }
-
 
     //todo 根据tab键的点击，每次查询一个请求，以此来减轻网站同一时间发送请求的个数，减少浏览器资源的消耗
 
