@@ -1,7 +1,7 @@
 <template>
   <div class="index-page">
     <a-input-search
-      v-model:value="searchParams.text"
+      v-model:value="searchText"
       placeholder="input search text"
       enter-button="Search"
       size="large"
@@ -33,18 +33,23 @@ import { useRoute, useRouter } from "vue-router";
 import _default from "ant-design-vue/es/vc-slick/inner-slider";
 import data = _default.data;
 import MyAxios from "@/plugins/MyAxios";
+import { message } from "ant-design-vue";
 
 const pictureList = ref([]);
 const postList = ref([]);
 const userList = ref([]);
 
-const searchText = ref("");
+// const searchText = ref("");
+
 const router = useRouter();
 const route = useRoute();
 const activeKey = route.params.category;
 
+const searchText = ref(route.query.text || "");
+
 const initSearchParams = {
   // text: "",//是否增加？？
+  type: activeKey,
   text: "",
   pageSize: 10,
   pageNum: 1,
@@ -87,37 +92,65 @@ const loadDataold = (params: any) => {
  * 加载数据第二种版本---以实现点击search就实现查询的功能
  *
  * */
-const loadData = (params: any) => {
+const loadDataAll = (params: any) => {
   const query = {
     ...params,
     searchText: params.text,
   };
   MyAxios.post("/search/all", query).then((res: any) => {
-    //都还没有传递参数
+    //query已经传递参数了
     postList.value = res.postList;
     userList.value = res.userList;
     pictureList.value = res.pictureList;
   });
 };
 
+/*
+ * 加载数据第三种版本---获取单类数据
+ *
+ * */
+const loadData = (params: any) => {
+  const { type } = params;
+  if (!type) {
+    message.error("tab栏类别为空");
+    return;
+  }
+  const query = {
+    ...params,
+    searchText: params.text,
+  };
+  MyAxios.post("/search/all", query).then((res: any) => {
+    if (type === "post") {
+      postList.value = res.postList;
+    } else if (type === "user") {
+      userList.value = res.userList;
+    } else if (type === "picture") {
+      pictureList.value = res.pictureList;
+    }
+  });
+};
+
 //首次请求
-loadData(initSearchParams);
+// loadData(initSearchParams);
 
 watchEffect(() => {
   searchParams.value = {
     ...initSearchParams,
     text: route.query.text,
     //只要watchEffect发生了修改，就会触发重新执行
+    type: route.params.category,
   } as any;
+  loadData(searchParams.value);
 });
 const onSearch = (value: string) => {
   // alert(value);onSearch会改变页面的路由
   console.log(value);
   router.push({
-    query: searchParams.value,
+    query: {
+      ...searchParams.value,
+      text: value,
+    },
   });
-  //以实现点击search就实现查询的功能
-  loadData(searchParams.value);
 };
 const onTabChange = (key: string) => {
   router.push({
