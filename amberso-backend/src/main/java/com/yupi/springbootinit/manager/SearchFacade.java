@@ -9,6 +9,10 @@ import com.yupi.springbootinit.common.BaseResponse;
 import com.yupi.springbootinit.common.ErrorCode;
 import com.yupi.springbootinit.common.ResultUtils;
 import com.yupi.springbootinit.config.CosClientConfig;
+import com.yupi.springbootinit.dataSource.DataSource;
+import com.yupi.springbootinit.dataSource.PictureDataSource;
+import com.yupi.springbootinit.dataSource.PostDataSource;
+import com.yupi.springbootinit.dataSource.UserDataSource;
 import com.yupi.springbootinit.exception.BusinessException;
 import com.yupi.springbootinit.exception.ThrowUtils;
 import com.yupi.springbootinit.model.dto.post.PostQueryRequest;
@@ -24,12 +28,15 @@ import com.yupi.springbootinit.service.PostService;
 import com.yupi.springbootinit.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -41,13 +48,12 @@ import java.util.concurrent.CompletableFuture;
 public class SearchFacade {
 
     @Resource
-    private PostService postService;
-
+    private PostDataSource postDataSource;
     @Resource
-    private PictureService pictureService;
-
+    private UserDataSource userDataSource;
     @Resource
-    private UserService userService;
+    private PictureDataSource pictureDataSource;
+
 
     private final static Gson GSON = new Gson();
 
@@ -56,25 +62,27 @@ public class SearchFacade {
         String type = searchRequest.getType();
         SearchTypeEnum searchTypeEnum = SearchTypeEnum.getEnumByValue(type);
         ThrowUtils.throwIf(StringUtils.isBlank(type), ErrorCode.PARAMS_ERROR);
+        Long pageNum = searchRequest.getCurrent();
+        Long pageSize = searchRequest.getPageSize();
 
         //搜索出所有数据
         if(searchTypeEnum == null){
             CompletableFuture<Page<UserVO>> userTask = CompletableFuture.supplyAsync(() -> {
                 UserQueryRequest userQueryRequest = new UserQueryRequest();//用户参数解析
                 userQueryRequest.setUserName(searchText);
-                Page<UserVO> userVOPage = userService.listUserVOByPage(userQueryRequest);
+                Page<UserVO> userVOPage = userDataSource.doSearch(searchText,pageNum,pageSize);
                 return userVOPage;
             });
 
             CompletableFuture<Page<PostVO>> postTask = CompletableFuture.supplyAsync(() -> {
                 PostQueryRequest postQueryRequest = new PostQueryRequest();//帖子参数解析
                 postQueryRequest.setSearchText(searchText);
-                Page<PostVO> postVOPage = postService.listPostVOByPage(postQueryRequest, request);
+                Page<PostVO> postVOPage = postDataSource.doSearch(searchText,pageNum,pageSize);
                 return postVOPage;
             });
 
             CompletableFuture<Page<Picture>> pictureTask = CompletableFuture.supplyAsync(() -> {
-                Page<Picture> picturePage = pictureService.searchPicture(searchText, 1, 10);//图片参数解析
+                Page<Picture> picturePage = pictureDataSource.doSearch(searchText,pageNum,pageSize);//图片参数解析
                 return picturePage;
             });
 
@@ -97,26 +105,35 @@ public class SearchFacade {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR,"查询异常");
             }
         }else{
+            Map<String, DataSource<T>> typeDataSourceMap = new HashMap(){{//注册器模式----也可以理解成一种单例模式
+                put(SearchTypeEnum.POST.getValue(),postDataSource);
+                put(SearchTypeEnum.USER.getValue(),userDataSource);
+                put(SearchTypeEnum.PICTURE.getValue(),pictureDataSource);
+            }};
+            DataSource<?> dataSource = typeDataSourceMap.get(type);
+            Page<?> page = dataSource.doSearch(searchText, pageNum, pageSize);
             SearchVO searchVO = new SearchVO();
-            switch (searchTypeEnum){
-                case POST:
-                    PostQueryRequest postQueryRequest = new PostQueryRequest();//帖子参数解析
-                    postQueryRequest.setSearchText(searchText);
-                    Page<PostVO> postVOPage = postService.listPostVOByPage(postQueryRequest, request);
-                    searchVO.setPostList(postVOPage.getRecords());
-                    break;
-                case USER:
-                    UserQueryRequest userQueryRequest = new UserQueryRequest();//用户参数解析
-                    userQueryRequest.setUserName(searchText);
-                    Page<UserVO> userVOPage = userService.listUserVOByPage(userQueryRequest);
-                    searchVO.setUserList(userVOPage.getRecords());
-                    break;
-                case PICTURE:
-                    Page<Picture> picturePage = pictureService.searchPicture(searchText, 1, 10);//图片参数解析
-                    searchVO.setPictureList(picturePage.getRecords());
-                    break;
-                default:
-            }
+            searchVO.setDataList(page.getRecords());
+
+//            switch (searchTypeEnum){
+//                case POST:
+//                    PostQueryRequest postQueryRequest = new PostQueryRequest();//帖子参数解析
+//                    postQueryRequest.setSearchText(searchText);
+//                    Page<PostVO> postVOPage = postDataSource.doSearch(searchText,pageNum,pageSize);
+//                    searchVO.setPostList(postVOPage.getRecords());
+//                    break;
+//                case USER:
+//                    UserQueryRequest userQueryRequest = new UserQueryRequest();//用户参数解析
+//                    userQueryRequest.setUserName(searchText);
+//                    Page<UserVO> userVOPage = userDataSource.doSearch(searchText,pageNum,pageSize);
+//                    searchVO.setUserList(userVOPage.getRecords());
+//                    break;
+//                case PICTURE:
+//                    Page<Picture> picturePage = pictureDataSource.doSearch(searchText,pageNum,pageSize);//图片参数解析
+//                    searchVO.setPictureList(picturePage.getRecords());
+//                    break;
+//                default:
+//            }
             return searchVO;//返回出去
 
         }
