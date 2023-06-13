@@ -105,7 +105,7 @@ public class SearchFacade {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR,"查询异常");
             }
         }else{
-
+            //通过门面模式＋注册器模式封装好了数据源----使得代码好维护好扩展
             DataSource<?> dataSource = dataSourceRegistry.getDataSourceByType(type);
             Page<?> page = dataSource.doSearch(searchText, pageNum, pageSize);
             SearchVO searchVO = new SearchVO();
