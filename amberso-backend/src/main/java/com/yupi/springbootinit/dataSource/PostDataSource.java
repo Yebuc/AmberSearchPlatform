@@ -7,8 +7,11 @@ import com.yupi.springbootinit.service.PostService;
 import com.yupi.springbootinit.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 帖子服务实现
@@ -33,7 +36,9 @@ public class PostDataSource implements DataSource<PostVO> {
         postQueryRequest.setCurrent(pageNum);
         postQueryRequest.setPageSize(pageSize);
 
-        Page<PostVO> postVOPage = postService.listPostVOByPage(postQueryRequest, null);
+        HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.currentRequestAttributes())).getRequest();
+
+        Page<PostVO> postVOPage = postService.listPostVOByPage(postQueryRequest, request);
         return postVOPage;
     }
 }
