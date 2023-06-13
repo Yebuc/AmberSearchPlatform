@@ -9,10 +9,7 @@ import com.yupi.springbootinit.common.BaseResponse;
 import com.yupi.springbootinit.common.ErrorCode;
 import com.yupi.springbootinit.common.ResultUtils;
 import com.yupi.springbootinit.config.CosClientConfig;
-import com.yupi.springbootinit.dataSource.DataSource;
-import com.yupi.springbootinit.dataSource.PictureDataSource;
-import com.yupi.springbootinit.dataSource.PostDataSource;
-import com.yupi.springbootinit.dataSource.UserDataSource;
+import com.yupi.springbootinit.dataSource.*;
 import com.yupi.springbootinit.exception.BusinessException;
 import com.yupi.springbootinit.exception.ThrowUtils;
 import com.yupi.springbootinit.model.dto.post.PostQueryRequest;
@@ -54,8 +51,11 @@ public class SearchFacade {
     @Resource
     private PictureDataSource pictureDataSource;
 
+    @Resource
+    private DataSourceRegistry dataSourceRegistry;
 
     private final static Gson GSON = new Gson();
+
 
     public SearchVO searchAll(@RequestBody SearchRequest searchRequest, HttpServletRequest request){
         String searchText = searchRequest.getSearchText();
@@ -105,12 +105,8 @@ public class SearchFacade {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR,"查询异常");
             }
         }else{
-            Map<String, DataSource<T>> typeDataSourceMap = new HashMap(){{//注册器模式----也可以理解成一种单例模式
-                put(SearchTypeEnum.POST.getValue(),postDataSource);
-                put(SearchTypeEnum.USER.getValue(),userDataSource);
-                put(SearchTypeEnum.PICTURE.getValue(),pictureDataSource);
-            }};
-            DataSource<?> dataSource = typeDataSourceMap.get(type);
+
+            DataSource<?> dataSource = dataSourceRegistry.getDataSourceByType(type);
             Page<?> page = dataSource.doSearch(searchText, pageNum, pageSize);
             SearchVO searchVO = new SearchVO();
             searchVO.setDataList(page.getRecords());
