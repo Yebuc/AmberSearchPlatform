@@ -66,6 +66,7 @@ public class SearchFacade {
         Long pageSize = searchRequest.getPageSize();
 
         //搜索出所有数据   由于当前搜索还是不够灵活，打算进一步优化系统，引入elasticSearch，支持倒排索引的分词搜索，让搜索功能更加灵活
+        //开始接入elasticStack，通过kibana可视化elisticSearch操作数据，操作不同的数据源，分词搜索与倒排索引的特性使得搜索功能更加灵活与丰富
         if(searchTypeEnum == null){
             CompletableFuture<Page<UserVO>> userTask = CompletableFuture.supplyAsync(() -> {
                 UserQueryRequest userQueryRequest = new UserQueryRequest();//用户参数解析
