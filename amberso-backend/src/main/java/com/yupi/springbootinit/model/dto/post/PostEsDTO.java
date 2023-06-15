@@ -11,6 +11,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
@@ -21,14 +22,14 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  * @from <a href="https://yupi.icu">编程导航知识星球</a>
  **/
 // todo 取消注释开启 ES（须先配置 ES）
-//@Document(indexName = "post")
+@Document(indexName = "post")//这里的indexName指的是你要关联到的ES索引的名称
 @Data
 public class PostEsDTO implements Serializable {
 
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
     /**
-     * id
+     * id   ES“数据库”的唯一标识
      */
     @Id
     private Long id;
@@ -70,7 +71,7 @@ public class PostEsDTO implements Serializable {
     private Date createTime;
 
     /**
-     * 更新时间
+     * 更新时间  index = false--->不把字段作为索引
      */
     @Field(index = false, store = true, type = FieldType.Date, format = {}, pattern = DATE_TIME_PATTERN)
     private Date updateTime;
@@ -98,7 +99,7 @@ public class PostEsDTO implements Serializable {
         BeanUtils.copyProperties(post, postEsDTO);
         String tagsStr = post.getTags();
         if (StringUtils.isNotBlank(tagsStr)) {
-            postEsDTO.setTags(GSON.fromJson(tagsStr, new TypeToken<List<String>>() {
+            postEsDTO.setTags(GSON.fromJson(tagsStr, new TypeToken<List<String>>() {//因为tags字段取出来的是json格式
             }.getType()));
         }
         return postEsDTO;

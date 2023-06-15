@@ -2,6 +2,7 @@ package com.yupi.springbootinit.dataSource;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yupi.springbootinit.model.dto.post.PostQueryRequest;
+import com.yupi.springbootinit.model.entity.Post;
 import com.yupi.springbootinit.model.vo.PostVO;
 import com.yupi.springbootinit.service.PostService;
 import com.yupi.springbootinit.service.UserService;
@@ -38,8 +39,10 @@ public class PostDataSource implements DataSource<PostVO> {
 
         HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.currentRequestAttributes())).getRequest();
 
-        Page<PostVO> postVOPage = postService.listPostVOByPage(postQueryRequest, request);
-        return postVOPage;
+//        Page<PostVO> postVOPage = postService.listPostVOByPage(postQueryRequest, request);//使用mybatis-plus组合查询post
+//        return postVOPage;
+        Page<Post> postPage = postService.searchFromEs(postQueryRequest);//使用ES查询post，支持分词，且搜索需求更灵活
+        return postService.getPostVOPage(postPage,request);
     }
 }
 
