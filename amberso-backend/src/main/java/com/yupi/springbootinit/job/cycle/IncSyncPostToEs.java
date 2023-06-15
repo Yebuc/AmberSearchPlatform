@@ -11,15 +11,14 @@ import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 /**
  * 增量同步帖子到 es
- *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * 增量同步任务
  */
 // todo 取消注释开启任务
-//@Component
+//@Component//@Scheduled(fixedRate = 60 * 1000)定时任务----每分钟执行一次
 @Slf4j
 public class IncSyncPostToEs {
 
@@ -34,7 +33,7 @@ public class IncSyncPostToEs {
      */
     @Scheduled(fixedRate = 60 * 1000)
     public void run() {
-        // 查询近 5 分钟内的数据
+        // 查询近 5 分钟内的数据   防止前几分钟内有定时任务同步失败
         Date fiveMinutesAgoDate = new Date(new Date().getTime() - 5 * 60 * 1000L);
         List<Post> postList = postMapper.listPostWithDelete(fiveMinutesAgoDate);
         if (CollectionUtils.isEmpty(postList)) {
