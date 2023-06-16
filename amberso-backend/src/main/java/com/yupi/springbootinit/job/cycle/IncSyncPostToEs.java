@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * 增量同步帖子到 es
- * 增量同步任务
+ * 增量同步任务               可以使用logstash进行数据同步
  */
 // todo 取消注释开启任务
 //@Component//@Scheduled(fixedRate = 60 * 1000)定时任务----每分钟执行一次
